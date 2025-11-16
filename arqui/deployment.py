@@ -2,42 +2,48 @@ import os
 from .settings import *
 from .settings import BASE_DIR
 
-ALLOWED_HOSTS = [os.environ['WEBSITE_HOSTNAME']]
-CSRF_TRUSTED_ORIGINS = ['https://'+os.environ['WEBSITE_HOSTNAME']]
-DEBUG = True
-SECRET_KEY = os.environ['MY_SECRET_KEY']
+WEBSITE_HOSTNAME = os.environ.get("WEBSITE_HOSTNAME")
+
+if WEBSITE_HOSTNAME:
+    ALLOWED_HOSTS = [WEBSITE_HOSTNAME]
+    CSRF_TRUSTED_ORIGINS = [f"https://{WEBSITE_HOSTNAME}"]
+else:
+    ALLOWED_HOSTS = ["*"]
+    CSRF_TRUSTED_ORIGINS = []
+
+DEBUG = os.environ.get("DJANGO_DEBUG", "False").lower() == "true"
+
+SECRET_KEY = os.environ.get("MY_SECRET_KEY", SECRET_KEY)
 
 PUBLIC_BASE_URL = os.environ.get(
-    "PUBLIC_BASE_URL", f"https://{os.environ['WEBSITE_HOSTNAME']}")
+    "PUBLIC_BASE_URL",
+    f"https://{WEBSITE_HOSTNAME}" if WEBSITE_HOSTNAME else ""
+)
 
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 USE_X_FORWARDED_HOST = True
 
 MIDDLEWARE = [
-    'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
+    "django.middleware.security.SecurityMiddleware",
     "corsheaders.middleware.CorsMiddleware",
-    'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'releaseVersions.middleware.version_guard',
-    'backend.core.middleware.AllowPopupsCOOPMiddleware',
+    "django.contrib.sessions.middleware.SessionMiddleware",
+    "django.middleware.common.CommonMiddleware",
+    "django.middleware.csrf.CsrfViewMiddleware",
+    "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "django.contrib.messages.middleware.MessageMiddleware",
+    "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
-
 
 STORAGES = {
     "default": {
         "BACKEND": "django.core.files.storage.FileSystemStorage",
-
     },
     "staticfiles": {
-        "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage",
+        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
     },
 }
 
+STATIC_ROOT = BASE_DIR / "staticfiles"
 connection_string = os.environ.get(
     "CUSTOMCONNSTR_AZURE_POSTGRESQL_CONNECTIONSTRING", "")
 
@@ -55,6 +61,3 @@ DATABASES = {
         'HOST': connection_params.get('Server', 'localhost'),
     }
 }
-
-
-STATIC_ROOT = BASE_DIR/'staticfiles'
