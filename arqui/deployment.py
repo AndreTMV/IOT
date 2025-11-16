@@ -44,6 +44,7 @@ STORAGES = {
 }
 
 STATIC_ROOT = BASE_DIR / "staticfiles"
+STATIC_URL = "static/"
 connection_string = os.environ.get(
     "CUSTOMCONNSTR_AZURE_POSTGRESQL_CONNECTIONSTRING", "")
 
