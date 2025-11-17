@@ -25,8 +25,9 @@ USE_X_FORWARDED_HOST = True
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
-    "corsheaders.middleware.CorsMiddleware",
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     "django.contrib.sessions.middleware.SessionMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
@@ -39,12 +40,10 @@ STORAGES = {
         "BACKEND": "django.core.files.storage.FileSystemStorage",
     },
     "staticfiles": {
-        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+        "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage",
     },
 }
 
-STATIC_ROOT = BASE_DIR / "staticfiles"
-STATIC_URL = "static/"
 connection_string = os.environ.get(
     "CUSTOMCONNSTR_AZURE_POSTGRESQL_CONNECTIONSTRING", "")
 
@@ -62,3 +61,5 @@ DATABASES = {
         'HOST': connection_params.get('Server', 'localhost'),
     }
 }
+STATIC_ROOT = BASE_DIR / "staticfiles"
+STATIC_URL = "static/"
