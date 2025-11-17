@@ -7,6 +7,7 @@ class Sensor(models.Model):
     class tipoSensor(models.TextChoices):
         ULTRASONICO = "ultrasonico", "ULTRASONICO"
         TEMPERATURA = "temperatura", "TEMPERATURA"
+        FOTORESISTOR = "fotoresistor", "FOTORESISTOR"
     tipo = models.CharField(max_length=12, choices=tipoSensor.choices)
     name = models.CharField(max_length=300)
 
