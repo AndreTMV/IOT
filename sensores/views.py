@@ -1,4 +1,5 @@
 from django.shortcuts import render
+import json
 from rest_framework import views, viewsets
 from .serializer import SensorSerializer, ReadingSerializer
 from .models import Sensor, Reading
@@ -88,7 +89,7 @@ class SensorsDashboardView(TemplateView):
             .order_by("day", "sensor__tipo")
         )
 
-        context["series_7d"] = [
+        series_7d_list = [
             {
                 "day": row["day"].strftime("%Y-%m-%d"),
                 "tipo": row["sensor__tipo"],
@@ -96,5 +97,7 @@ class SensorsDashboardView(TemplateView):
             }
             for row in series_7d
         ]
+
+        context["series_7d_json"] = json.dumps(series_7d_list)
 
         return context

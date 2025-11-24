@@ -104,7 +104,7 @@
     </div>
 
     <script>
-      const seriesData = JSON.parse('{{ series_7d|safe|escapejs }}');
+      const seriesData = JSON.parse('{{ series_7d_json|safe }}');
 
       const grouped = {};
       seriesData.forEach((item) => {
