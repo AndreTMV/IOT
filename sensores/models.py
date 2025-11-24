@@ -21,19 +21,20 @@ class Reading(models.Model):
     value = models.DecimalField(max_digits=12, decimal_places=4, db_index=True)
     readed_at = models.DateTimeField(auto_now_add=True)
 
-    indexes = [
-        models.Index(
-            fields=["sensor, readed_at"],
-            name="idx_sensor_readed_at"
-        ),
-    ]
-    constraints = [
-        models.UniqueConstraint(
-            fields=["sensor", "readed_at"],
-            name="uniq_sensor_read_at",
-        ),
-    ]
-    ordering = ["-readed_at"]
+    class Meta:
+        indexes = [
+            models.Index(
+                fields=["sensor", "readed_at"],
+                name="idx_sensor_readed_at"
+            ),
+        ]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["sensor", "readed_at"],
+                name="uniq_sensor_read_at",
+            ),
+        ]
+        ordering = ["-readed_at"]
 
     def __str__(self):
         return f"{self.sensor} @ {self.readed_at}: {self.value}"

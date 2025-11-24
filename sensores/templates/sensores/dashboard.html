@@ -1,0 +1,147 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Dashboard de Sensores</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  </head>
+  <body class="bg-light">
+    <div class="container py-4">
+      <h1 class="mb-4">Dashboard de Sensores</h1>
+
+      <div class="row mb-4">
+        <div class="col-md-4 mb-3">
+          <div class="card shadow-sm">
+            <div class="card-body">
+              <h5 class="card-title">Sensores</h5>
+              <p class="display-6">{{ overall.total_sensors }}</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-4 mb-3">
+          <div class="card shadow-sm">
+            <div class="card-body">
+              <h5 class="card-title">Lecturas totales</h5>
+              <p class="display-6">{{ overall.total_readings }}</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-4 mb-3">
+          <div class="card shadow-sm">
+            <div class="card-body">
+              <h5 class="card-title">Última lectura</h5>
+              {% if overall.last_reading_at %}
+                <p class="fs-5">{{ overall.last_reading_at|date:"Y-m-d H:i:s" }}</p>
+              {% else %}
+                <p class="fs-5">N/A</p>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card mb-4 shadow-sm">
+        <div class="card-body">
+          <h4 class="card-title mb-3">KPIs por sensor (últimas 24h)</h4>
+          <div class="table-responsive">
+            <table class="table table-sm table-striped align-middle">
+              <thead>
+                <tr>
+                  <th>Sensor</th>
+                  <th>Tipo</th>
+                  <th class="text-end">Promedio</th>
+                  <th class="text-end">Mínimo</th>
+                  <th class="text-end">Máximo</th>
+                  <th class="text-end">Lecturas</th>
+                  <th class="text-end">Última lectura</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for row in per_sensor_24h %}
+                <tr>
+                  <td>{{ row.sensor__name }}</td>
+                  <td>{{ row.sensor__tipo }}</td>
+                  <td class="text-end">{{ row.avg_value|default_if_none:"-" }}</td>
+                  <td class="text-end">{{ row.min_value|default_if_none:"-" }}</td>
+                  <td class="text-end">{{ row.max_value|default_if_none:"-" }}</td>
+                  <td class="text-end">{{ row.count }}</td>
+                  <td class="text-end">
+                    {% if row.last_read_at %}
+                      {{ row.last_read_at|date:"Y-m-d H:i:s" }}
+                    {% else %}
+                      -
+                    {% endif %}
+                  </td>
+                </tr>
+                {% empty %}
+                <tr>
+                  <td colspan="7" class="text-center">
+                    No hay lecturas en las últimas 24 horas.
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="card mb-4 shadow-sm">
+        <div class="card-body">
+          <h4 class="card-title mb-3">
+            Promedio por día (últimos 7 días) por tipo de sensor
+          </h4>
+          <canvas id="seriesChart" height="100"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const seriesData = JSON.parse('{{ series_7d|safe|escapejs }}');
+
+      const grouped = {};
+      seriesData.forEach((item) => {
+        const tipo = item.tipo;
+        if (!grouped[tipo]) grouped[tipo] = [];
+        grouped[tipo].push(item);
+      });
+
+      const labelsSet = new Set();
+      seriesData.forEach((item) => labelsSet.add(item.day));
+      const labels = Array.from(labelsSet).sort();
+
+      const datasets = Object.keys(grouped).map((tipo) => {
+        const data = labels.map((day) => {
+          const found = grouped[tipo].find((x) => x.day === day);
+          return found ? found.avg : null;
+        });
+        return {
+          label: tipo,
+          data: data,
+          tension: 0.3,
+        };
+      });
+
+      const ctx = document.getElementById("seriesChart").getContext("2d");
+      new Chart(ctx, {
+        type: "line",
+        data: { labels: labels, datasets: datasets },
+        options: {
+          responsive: true,
+          interaction: { mode: "index", intersect: false },
+          scales: {
+            x: { title: { display: true, text: "Fecha" } },
+            y: { title: { display: true, text: "Valor promedio" } },
+          },
+        },
+      });
+    </script>
+  </body>
+</html>

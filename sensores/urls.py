@@ -5,6 +5,7 @@ from drf_yasg import openapi
 from . import views
 from django.urls import path, include
 import os
+from sensores.views import SensorsDashboardView
 
 router = routers.SimpleRouter()
 router.register(r'sensor', views.SensorView, 'sensor')
@@ -26,6 +27,8 @@ schema_view = get_schema_view(
 
 urlpatterns = [
     path("api/v1/", include(router.urls)),
+    path("dashboard/sensores/", SensorsDashboardView.as_view(),
+         name="sensors-dashboard"),
     path('docs/', schema_view.with_ui('swagger',
                                       cache_timeout=0), name='schema-swagger-ui'),
 ]
