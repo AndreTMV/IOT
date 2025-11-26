@@ -14,6 +14,27 @@
     <div class="container py-4">
       <h1 class="mb-4">Dashboard de Sensores</h1>
 
+      <!-- Filtro por día -->
+      <form method="get" class="row g-3 mb-4">
+        <div class="col-auto">
+          <label for="date" class="col-form-label">Selecciona el día:</label>
+        </div>
+        <div class="col-auto">
+          <input
+            type="date"
+            id="date"
+            name="date"
+            class="form-control"
+            value="{{ selected_date }}"
+            onchange="this.form.submit()"
+          />
+        </div>
+        <div class="col-auto d-none">
+          <!-- Botón opcional si no quieres auto-submit -->
+          <button type="submit" class="btn btn-primary">Filtrar</button>
+        </div>
+      </form>
+
       <div class="row mb-4">
         <div class="col-md-4 mb-3">
           <div class="card shadow-sm">
@@ -49,7 +70,9 @@
 
       <div class="card mb-4 shadow-sm">
         <div class="card-body">
-          <h4 class="card-title mb-3">KPIs por sensor (últimas 24h)</h4>
+          <h4 class="card-title mb-3">
+            KPIs por sensor (día seleccionado: {{ selected_date }})
+          </h4>
           <div class="table-responsive">
             <table class="table table-sm table-striped align-middle">
               <thead>
@@ -83,7 +106,7 @@
                 {% empty %}
                 <tr>
                   <td colspan="7" class="text-center">
-                    No hay lecturas en las últimas 24 horas.
+                    No hay lecturas para este día.
                   </td>
                 </tr>
                 {% endfor %}
@@ -96,7 +119,7 @@
       <div class="card mb-4 shadow-sm">
         <div class="card-body">
           <h4 class="card-title mb-3">
-            Promedio por día (últimos 7 días) por tipo de sensor
+            Promedio por tipo de sensor (día seleccionado: {{ selected_date }})
           </h4>
           <canvas id="seriesChart" height="100"></canvas>
         </div>
@@ -104,7 +127,9 @@
     </div>
 
     <script>
-      const seriesData = JSON.parse('{{ series_7d_json|safe }}');
+      // Usamos escapejs para que el JSON llegue bien al JS
+      const rawJson = '{{ series_7d_json|escapejs }}';
+      const seriesData = JSON.parse(rawJson || '[]');
 
       const grouped = {};
       seriesData.forEach((item) => {

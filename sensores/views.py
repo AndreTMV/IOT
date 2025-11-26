@@ -6,7 +6,7 @@ from .models import Sensor, Reading
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.decorators import api_view
-from datetime import timedelta
+from datetime import timedelta, datetime
 
 from django.utils import timezone
 from django.views.generic import TemplateView
@@ -53,9 +53,14 @@ class SensorsDashboardView(TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        now = timezone.now()
-        last_24h = now - timedelta(hours=24)
-        last_7d = now - timedelta(days=7)
+        date_str = self.request.GET.get("date")
+        if date_str:
+            try:
+                selected_date = datetime.strptime(date_str, "%Y-%m-%d").date()
+            except ValueError:
+                selected_date = timezone.localdate()
+        else:
+            selected_date = timezone.localdate()
 
         total_sensors = Sensor.objects.count()
         total_readings = Reading.objects.count()
@@ -67,8 +72,11 @@ class SensorsDashboardView(TemplateView):
             "last_reading_at": last_reading.readed_at if last_reading else None,
         }
 
-        per_sensor_24h = (
-            Reading.objects.filter(readed_at__gte=last_24h)
+        readings_for_day = Reading.objects.filter(
+            readed_at__date=selected_date)
+
+        per_sensor_day = (
+            readings_for_day
             .values("sensor_id", "sensor__name", "sensor__tipo")
             .annotate(
                 avg_value=Avg("value"),
@@ -79,25 +87,25 @@ class SensorsDashboardView(TemplateView):
             )
             .order_by("sensor__name")
         )
-        context["per_sensor_24h"] = per_sensor_24h
-
-        series_7d = (
-            Reading.objects.filter(readed_at__gte=last_7d)
-            .annotate(day=TruncDay("readed_at"))
-            .values("day", "sensor__tipo")
+        context["per_sensor_24h"] = per_sensor_day
+        series_day = (
+            readings_for_day
+            .values("sensor__tipo")
             .annotate(avg_value=Avg("value"))
-            .order_by("day", "sensor__tipo")
+            .order_by("sensor__tipo")
         )
 
-        series_7d_list = [
+        selected_day_str = selected_date.strftime("%Y-%m-%d")
+        series_day_list = [
             {
-                "day": row["day"].strftime("%Y-%m-%d"),
+                "day": selected_day_str,
                 "tipo": row["sensor__tipo"],
                 "avg": float(row["avg_value"]) if row["avg_value"] is not None else None,
             }
-            for row in series_7d
+            for row in series_day
         ]
 
-        context["series_7d_json"] = json.dumps(series_7d_list)
+        context["series_7d_json"] = json.dumps(series_day_list)
+        context["selected_date"] = selected_day_str
 
         return context
