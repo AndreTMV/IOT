@@ -118,7 +118,7 @@
       <div class="card mb-4 shadow-sm">
         <div class="card-body">
           <h4 class="card-title mb-3">
-            Promedio por tipo de sensor (día seleccionado: {{ selected_date }})
+            Lecturas por tipo de sensor (día seleccionado: {{ selected_date }})
           </h4>
           <canvas id="seriesChart" height="100"></canvas>
         </div>
@@ -161,7 +161,7 @@
           interaction: { mode: "index", intersect: false },
           scales: {
             x: { title: { display: true, text: "Hora" } },
-            y: { title: { display: true, text: "Valor promedio" } },
+            y: { title: { display: true, text: "Valor lectura" } },
           },
         },
       });
