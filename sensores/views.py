@@ -6,14 +6,12 @@ from .models import Sensor, Reading
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.decorators import api_view
-from datetime import timedelta, datetime
+from datetime import datetime
 
 from django.utils import timezone
 from django.views.generic import TemplateView
 from django.db.models import Avg, Max, Min, Count
-from django.db.models.functions import TruncDay
-
-# Create your views here.
+from django.db.models.functions import TruncMinute
 
 
 class SensorView(viewsets.ModelViewSet):
@@ -32,7 +30,8 @@ def sensor_readings(request):
     if sensor_id:
         try:
             readings = Reading.objects.filter(
-                sensor_id=sensor_id).order_by('-readed_at')
+                sensor_id=sensor_id
+            ).order_by('-readed_at')
             serialized_readings = ReadingSerializer(readings, many=True).data
             return Response({"lectures": serialized_readings})
         except Exception as e:
@@ -73,7 +72,8 @@ class SensorsDashboardView(TemplateView):
         }
 
         readings_for_day = Reading.objects.filter(
-            readed_at__date=selected_date)
+            readed_at__date=selected_date
+        )
 
         per_sensor_day = (
             readings_for_day
@@ -88,17 +88,18 @@ class SensorsDashboardView(TemplateView):
             .order_by("sensor__name")
         )
         context["per_sensor_24h"] = per_sensor_day
+
         series_day = (
             readings_for_day
-            .values("sensor__tipo")
+            .annotate(ts=TruncMinute("readed_at"))
+            .values("ts", "sensor__tipo")
             .annotate(avg_value=Avg("value"))
-            .order_by("sensor__tipo")
+            .order_by("ts", "sensor__tipo")
         )
 
-        selected_day_str = selected_date.strftime("%Y-%m-%d")
         series_day_list = [
             {
-                "day": selected_day_str,
+                "time": row["ts"].strftime("%H:%M"),
                 "tipo": row["sensor__tipo"],
                 "avg": float(row["avg_value"]) if row["avg_value"] is not None else None,
             }
@@ -106,6 +107,6 @@ class SensorsDashboardView(TemplateView):
         ]
 
         context["series_7d_json"] = json.dumps(series_day_list)
-        context["selected_date"] = selected_day_str
+        context["selected_date"] = selected_date.strftime("%Y-%m-%d")
 
         return context

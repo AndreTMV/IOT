@@ -30,7 +30,6 @@
           />
         </div>
         <div class="col-auto d-none">
-          <!-- Botón opcional si no quieres auto-submit -->
           <button type="submit" class="btn btn-primary">Filtrar</button>
         </div>
       </form>
@@ -127,7 +126,6 @@
     </div>
 
     <script>
-      // Usamos escapejs para que el JSON llegue bien al JS
       const rawJson = '{{ series_7d_json|escapejs }}';
       const seriesData = JSON.parse(rawJson || '[]');
 
@@ -139,12 +137,12 @@
       });
 
       const labelsSet = new Set();
-      seriesData.forEach((item) => labelsSet.add(item.day));
+      seriesData.forEach((item) => labelsSet.add(item.time));
       const labels = Array.from(labelsSet).sort();
 
       const datasets = Object.keys(grouped).map((tipo) => {
-        const data = labels.map((day) => {
-          const found = grouped[tipo].find((x) => x.day === day);
+        const data = labels.map((time) => {
+          const found = grouped[tipo].find((x) => x.time === time);
           return found ? found.avg : null;
         });
         return {
@@ -162,7 +160,7 @@
           responsive: true,
           interaction: { mode: "index", intersect: false },
           scales: {
-            x: { title: { display: true, text: "Fecha" } },
+            x: { title: { display: true, text: "Hora" } },
             y: { title: { display: true, text: "Valor promedio" } },
           },
         },
